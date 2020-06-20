@@ -1,0 +1,106 @@
+void rand_num(void) 
+{
+    while(is_move || is_merge)  //如果可以移动，或者可以合并，那么才能产生数字，
+    {
+        int random = rand() % SIZE;
+        if(!arr[random])         //这个就是保证产生的随机数是空白中的，已经格子中已经有的就不行，重新产生
+        {
+            arr[random] = 2;
+            break;
+        }
+    }
+    is_move = 0;
+    is_merge = 0;
+}
+ 
+//移动的主要函数，最重要的地方，这个函数接收三个参数，loop_count，需要循环的次数，current_i，当前移动的元素数组下标，
+//direction这个是因为有上下左右四个方向，比如当前元素是  arr[5],那么它左边的格子就是arr[5-1],右边就是arr[5+1],
+//上边就是arr[5-4],下边就是arr[5+4],这里的 1，-1,4，-4就是direction，就是把四个方向的函数提取出相同的部分，公用这一个移动方法，用direction区分方向。
+//移动是被move_up ...等等这些函数调用的，所以请先去看move_up ...等等函数的作用。
+//先说一下，move_up_pre这个函数结合了移动、合并，这个函数调用了move_up这个函数，而move_up 又会调用move_go这个函数。
+//从move_up 这个函数过来了，举个例子：
+//比如现在当前的i是5 ，即第二行第2个数字2，需要向上移动，那么它的循环次数是1次，direction=-4，说明它上面的那个数字下标比当前这个小4
+//if(arr[current_i] && !arr[current_i + direction])  如果当前这个数字不为0，并且它上面的那个数字为0那么就可以向上移动
+ 
+void move_go(int loop_count, int current_i, int direction)
+{
+    int i;
+    for(i = 0; i < loop_count; i++)
+    {
+        if(arr[current_i] && !arr[current_i + direction])
+        {
+            arr[current_i + direction] = arr[current_i];  //把它上面那个数字改成当前这个数字，
+            arr[current_i] = 0;  //把当前这个数字改成0
+            current_i += direction;  //再把当前的current_i ,-4,继续看它上面是什么情况，能移动就移动不能移动就算了
+            is_move = 1;   //能进来说明能移动，所以把标志 是否能移动 设置为1
+        }
+    }
+}
+//OK这个函数完了，就完成了一次单纯的移动操作，那么向左，向右，向下一个道理，我就不说了，下来去看move_up_pre函数去
+ 
+//好OK，这个函数就是负责向上移动，不用管数字是否相同还是不同，全部一个顶一个一个顶一个移动到一个方向
+void move_up(void)
+{
+    // loop_count循环次数，为啥会有这个变量，因为向上移动有的数字需要移动一次，有的需要移动2,3次，而最上边的数字则不需要移动所以，
+    //loop_count控制循环次数，direction，控制方向，向上移动所以是以从下往上的角度看的，那么direction=-4，意思就是上一个元素的下标比当前元素小4
+    //所以是-4.
+    int i, loop_count, direction;  
+    for(i = 0; i < SIZE; i++)
+    {
+        if(arr[i])  //移动时，如果这个格子的数字不为0才移动，为0的话不用管了，能进到这个if说明当前要移动的数字不为0，也就是不是空白，空白不需要移动
+        {
+            loop_count = i / 4;  
+//计算循环次数，0 1 2 3，是最上层的数字不用移动，所以i /4=0,不用移动，第二行4,5,6,7，最多需要移动1次，i/4=1,依次类推
+            direction = -4;
+//把当前格子中的数组下标，需要循环的次数，还有方向传给move_go 这个函数，接下来去看move_go 这个函数
+            move_go(loop_count, i, direction);
+        }
+    }
+}
+ 
+ 
+void move_down(void)
+{
+    int i, loop_count, direction;
+    for(i = SIZE - 1; i >= 0; i--)
+    {
+        if(arr[i])
+        {
+            loop_count = (4 - 1) - i / 4;
+            direction = 4;
+            move_go(loop_count, i, direction); 
+        }
+    }
+}
+ 
+ 
+void move_right(void)
+{
+    int i, loop_count, direction;
+    for(i = SIZE - 1; i >= 0; i--)
+    {
+        if(arr[i])
+        {
+            loop_count = (4 - 1) - (i + 4) % 4;
+            direction = 1;
+            move_go(loop_count, i, direction);
+        }
+    }
+}
+ 
+ 
+void move_left(void)
+{
+    int i, loop_count, direction;
+    for(i = 0; i < SIZE; i++)
+    {
+        if(arr[i])
+        {
+            loop_count = (i + 4) % 4;
+            direction = -1;
+            move_go(loop_count, i, direction);
+        }
+    }
+}
+ 
+//合并函数，只负责一次合并，把接收当前数字下标，把它上或者下或者左或者右的格子合并一个
