@@ -1,0 +1,118 @@
+void merge(int current_i, int direction)
+{
+//如果当前这个格子和它四个方向相邻的格子都不为0时并且，这两个数字相等时才进行合并操作
+    if(arr[current_i] && arr[current_i + direction] && arr[current_i] == arr[current_i + direction])
+    {
+        arr[current_i] = arr[current_i + direction] * 2;
+        total += arr[current_i];
+        arr[current_i + direction] = 0;
+        is_merge = 1; 
+    }
+}
+ 
+//这个就是我之前说的分三步，第一步移动清楚空白，第二步合并，第三步移动清楚空白完成一次移动合并操作，下来我仔细讲一下
+void move_up_pre(void)
+{
+    move_up();  //先调用移动方法去除空白，那么先去move_up 看这个函数是干啥的，OK看完move_up 函数，再往下看
+// 两个move_up 中间夹着的就是合并的动作，同样merge合并的这个函数也是接收一个direction参数，四个方向的合并公用一个方法
+// 继续上面的向上移动上去的那个接着画个图
+//那么合并操作完成，应该是这个样子，粉色的2其实已经合并了，是不存在的我先放在那里，是想说明我的合并方法会产生空白，所以需要再做一遍移动操作
+//向上合并，那么我从上往下看，现在先看第一行的第一个数字，当然如果没有数字那就不合并了，现在假设都有数字
+//和它下面的数字比较，就是竖着往下走，如果相同，把第一个数字乘2，第二个数字设置为0 ，然后看第二个数字
+//和第三个数字，那么这会其实没必要比较第二个和第三个，直接去比较第三个和第第四个就行了，但是
+//我不想分情况了，就直接往下比较吧，白做一次比较，然后就这样依次往后比较
+    int i, j, direction = 4; //合并是从上往下看，所以direction=4，即它下面的那个格子数组下标比当前这个大4
+    for(i = 0; i < 4; i++)  
+// 这里的i从0 到3 ，即0,1,2,3，控制列数，即0开头的那一列，1开头的那一列，以此类推
+    {
+        for(j = i; j < i + 12; j += 4)
+//  当i=0时,j 是0,4,8，当i=1时，j是1,5,9以此类推,传给merge进行合并，关于下、左、右合并道理类似，我就不说了
+        {
+            merge(j, direction);
+        }
+    }
+    move_up();
+}
+ 
+void move_down_pre(void)
+{
+    move_down();
+    int i, j, direction = -4;
+    for(i = 4 - 1; i >= 0; i--)
+    {
+        for(j = i + 12; j >= 4; j -= 4)
+        {
+            merge(j, direction);
+        }
+    }
+    move_down();
+}
+ 
+void move_right_pre(void)
+{
+    move_right();
+    int i, j, direction = -1;
+    for(i = 4 - 1; i >= 0; i--)
+    {
+        for(j = 4 * i + 3; j > 4 * i; j--)
+        {
+            merge(j, direction);
+        }
+    }
+    move_right();
+}
+ 
+void move_left_pre(void)
+{
+    move_left();
+    int i, j, direction = 1;
+    for(i = 0; i <= 3; i++)
+    {
+        for(j = 4 * i; j < 4 * i + 3; j++)
+        {
+            merge(j, direction);
+        }
+    }
+    move_left();
+}
+ 
+int main(void)
+{
+    srand(time(NULL));
+    init();
+    print_game();
+    disable_terminal_return();
+    while(1)
+    {
+        switch(getchar())
+        {
+            case UP:
+            case UP_B:
+                move_up_pre();
+                rand_num();
+                print_game();
+                break;
+            case DOWN:
+            case DOWN_B:
+                move_down_pre();
+                rand_num();
+                print_game();
+                break;
+            case RIGHT:
+            case RIGHT_B:
+                move_right_pre();
+                rand_num();
+                print_game();
+                break;
+            case LEFT:
+            case LEFT_B:
+                move_left_pre();
+                rand_num();
+                print_game();
+                break;
+            default:
+                break;
+        }
+    }
+    return 0;
+}
